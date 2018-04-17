@@ -1,0 +1,70 @@
+I -
+1. chris@ubuntu:/$ sudo vi /etc/hostname
+2. chris@ubuntu:/$ vi /etc/motd.tail
+3. touch ~/.bashrc
+   alias ls='ls --color'
+
+
+II -
+1. cat /etc/passwd | awk -F: '{print $ 1}'
+2. users
+3. cat /etc/group | awk -F: '{print $ 1}' | wc -l
+4. Oui, l'utilisateur "bin" existe -> id bin (renvoi 2).
+5. su bin
+6. cat /etc/passwd | awk -F: '{print $1 , $4}' montre 1 utilisateur en root (o): root
+7. groupe 2
+8. adduser tempy(groupe 1000)
+9. add group staff, usermod -g staff tempy
+10. groups tempy
+11. Entrer le mot de passe défini à la création de l'utilisateur.
+12. view -p, puis modifier la 6eme colonne
+13. find . -type d -perm -u+w
+14. -> chmod a-rw *
+    -> chmod u+rwx,g+rx-w,o+r-wx *
+15. chmod u+rwx *
+    chmod g-x,o-x *
+
+III -
+Étapes pour définir les quotas :
+
+- sudo adduser toto # Ajout des utilisateurs toto et tata
+- sudo adduser tata
+
+- sudo apt-get install quota
+- sudo vi /etc/fstab
+- Ajout de "usrquota" à la ligne 6 :
+	=> UUID=af16a96e-6ecf-4083-9a77-b21fedf09e5d /home ext3 defaults,usrquota 0 2
+
+- sudo touch /part_vide1/home/toto/aquota.user  # Création du fichier quota pour l'utilisateur
+- sudo touch /part_vide1/home/tata/aquota.user  # Création du fichier quota pour l'utilisateur
+- sudo chmod 600 /part_vide1/home/toto/aquota.*
+- sudo chmod 600 /part_vide1/home/tata/aquota.*
+
+- sudo mount -o remount part_vide1/home/toto/
+- sudo mount -o remount part_vide1/home/tata/
+
+- quotacheck -cguvf /part_vide1/home/toto/
+- quotacheck -cguvf /part_vide1/home/tata/
+- sudo quotacheck -vgum /part_vide1/home/toto/ # Initialisations
+- sudo quotacheck -vgum /part_vide1/home/tata/
+- sudo quotacheck -vagum
+- sudo quotaon -avug # Activation
+
+- sdb1: warning, user block quota exceeded # Fixation des droits "soft".
+- sdb1: write failed, user block limit reached # Fixation des droits "hard".
+
+- sudo edquota -u toto # Fixation des droits pour les utilisateurs tata et toto.
+- sudo edquota -u tata
+
+- sudo EDITOR="vim"  edquota -u toto
+Disk quotas for user test (uid 1006):
+ Filesystem                   blocks       soft       hard     inodes     soft     hard
+/dev/sdb1                      9252       1000      5000          6        0        0
+
+- edquota -p toto tata
+
+- edquota -t # Fixer délai (grace period)
+Grace period before enforcing soft limits for users:
+Time units may be: days, hours, minutes, or seconds
+  Filesystem             Block grace period     Inode grace period
+  /dev/hdc1                    5minute                  5minute
